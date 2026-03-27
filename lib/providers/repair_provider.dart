@@ -1,7 +1,4 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
 import '../models/repair_request.dart';
 import '../models/repair_type.dart';
 import '../models/user.dart';
@@ -17,7 +14,7 @@ class RepairProvider extends ChangeNotifier {
 
   final DatabaseService _dbService = DatabaseService();
   final SyncService _syncService = SyncService();
-  final _uuid = const Uuid();
+  final _uuid = const UuidGenerator();
 
   // Getters
   List<RepairRequest> get requests => List.unmodifiable(_requests);
@@ -298,8 +295,8 @@ class RepairProvider extends ChangeNotifier {
 }
 
 // UUID生成器
-class Uuid {
-  const Uuid();
+class UuidGenerator {
+  const UuidGenerator();
   
   String v4() {
     return '${_randomHex(8)}-${_randomHex(4)}-4${_randomHex(3)}-${_randomHex(4)}-${_randomHex(12)}';

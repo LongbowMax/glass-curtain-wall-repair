@@ -275,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final success = await provider.syncFromCloud();
 
-    if (mounted) {
+    if (context.mounted) {
       Navigator.pop(context);
       
       ScaffoldMessenger.of(context).showSnackBar(
