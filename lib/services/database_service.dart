@@ -7,135 +7,202 @@ import '../models/repair_request.dart';
 class DatabaseService {
   static Database? _database;
   static final DatabaseService _instance = DatabaseService._internal();
+  static bool _initFailed = false;
 
   factory DatabaseService() => _instance;
 
   DatabaseService._internal();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+  Future<Database?> get database async {
+    if (_initFailed) return null;
+    if (_database != null) return _database;
+    try {
+      _database = await _initDatabase();
+      return _database;
+    } catch (e) {
+      print('数据库初始化失败: $e');
+      _initFailed = true;
+      return null;
+    }
   }
 
   Future<void> init() async {
     await database;
   }
 
-  Future<Database> _initDatabase() async {
-    final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, 'glass_curtain_wall_repair.db');
+  Future<Database?> _initDatabase() async {
+    try {
+      final databasesPath = await getDatabasesPath();
+      final path = join(databasesPath, 'glass_curtain_wall_repair.db');
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+      return await openDatabase(
+        path,
+        version: 1,
+        onCreate: _onCreate,
+        onOpen: (db) {
+          print('数据库已打开');
+        },
+      );
+    } catch (e) {
+      print('打开数据库失败: $e');
+      throw e;
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE repair_requests (
-        id TEXT PRIMARY KEY,
-        projectName TEXT,
-        buildingName TEXT,
-        ownerName TEXT,
-        ownerPhone TEXT,
-        ownerUnit TEXT,
-        address TEXT,
-        inspectionDate TEXT,
-        createdAt TEXT NOT NULL,
-        updatedAt TEXT NOT NULL,
-        items TEXT NOT NULL,
-        photos TEXT,
-        notes TEXT,
-        isSynced INTEGER DEFAULT 0
-      )
-    ''');
+    try {
+      await db.execute('''
+        CREATE TABLE repair_requests (
+          id TEXT PRIMARY KEY,
+          projectName TEXT,
+          buildingName TEXT,
+          ownerName TEXT,
+          ownerPhone TEXT,
+          ownerUnit TEXT,
+          address TEXT,
+          inspectionDate TEXT,
+          createdAt TEXT NOT NULL,
+          updatedAt TEXT NOT NULL,
+          items TEXT NOT NULL,
+          photos TEXT,
+          notes TEXT,
+          isSynced INTEGER DEFAULT 0
+        )
+      ''');
 
-    await db.execute('''
-      CREATE TABLE IF NOT EXISTS sync_queue (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        requestId TEXT NOT NULL,
-        operation TEXT NOT NULL,
-        data TEXT NOT NULL,
-        createdAt TEXT NOT NULL
-      )
-    ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS sync_queue (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          requestId TEXT NOT NULL,
+          operation TEXT NOT NULL,
+          data TEXT NOT NULL,
+          createdAt TEXT NOT NULL
+        )
+      ''');
+      print('数据库表创建成功');
+    } catch (e) {
+      print('创建数据库表失败: $e');
+      throw e;
+    }
   }
 
   // 保存需求单
-  Future<void> saveRequest(RepairRequest request) async {
+  Future<bool> saveRequest(RepairRequest request) async {
     final db = await database;
-    await db.insert(
-      'repair_requests',
-      _requestToMap(request),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    if (db == null) return false;
+    try {
+      await db.insert(
+        'repair_requests',
+        _requestToMap(request),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      return true;
+    } catch (e) {
+      print('保存需求单失败: $e');
+      return false;
+    }
   }
 
   // 获取所有需求单
   Future<List<RepairRequest>> getAllRequests() async {
     final db = await database;
-    final maps = await db.query('repair_requests', orderBy: 'createdAt DESC');
-    return maps.map((map) => _mapToRequest(map)).toList();
+    if (db == null) return [];
+    try {
+      final maps = await db.query('repair_requests', orderBy: 'createdAt DESC');
+      return maps.map((map) => _mapToRequest(map)).toList();
+    } catch (e) {
+      print('获取需求单失败: $e');
+      return [];
+    }
   }
 
   // 获取单个需求单
   Future<RepairRequest?> getRequest(String id) async {
     final db = await database;
-    final maps = await db.query(
-      'repair_requests',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    if (db == null) return null;
+    try {
+      final maps = await db.query(
+        'repair_requests',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
 
-    if (maps.isEmpty) return null;
-    return _mapToRequest(maps.first);
+      if (maps.isEmpty) return null;
+      return _mapToRequest(maps.first);
+    } catch (e) {
+      print('获取单个需求单失败: $e');
+      return null;
+    }
   }
 
   // 删除需求单
-  Future<void> deleteRequest(String id) async {
+  Future<bool> deleteRequest(String id) async {
     final db = await database;
-    await db.delete(
-      'repair_requests',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    if (db == null) return false;
+    try {
+      await db.delete(
+        'repair_requests',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return true;
+    } catch (e) {
+      print('删除需求单失败: $e');
+      return false;
+    }
   }
 
   // 更新同步状态
-  Future<void> updateSyncStatus(String id, bool isSynced) async {
+  Future<bool> updateSyncStatus(String id, bool isSynced) async {
     final db = await database;
-    await db.update(
-      'repair_requests',
-      {'isSynced': isSynced ? 1 : 0},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    if (db == null) return false;
+    try {
+      await db.update(
+        'repair_requests',
+        {'isSynced': isSynced ? 1 : 0},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return true;
+    } catch (e) {
+      print('更新同步状态失败: $e');
+      return false;
+    }
   }
 
   // 获取未同步的数据
   Future<List<RepairRequest>> getUnsyncedRequests() async {
     final db = await database;
-    final maps = await db.query(
-      'repair_requests',
-      where: 'isSynced = ?',
-      whereArgs: [0],
-    );
-    return maps.map((map) => _mapToRequest(map)).toList();
+    if (db == null) return [];
+    try {
+      final maps = await db.query(
+        'repair_requests',
+        where: 'isSynced = ?',
+        whereArgs: [0],
+      );
+      return maps.map((map) => _mapToRequest(map)).toList();
+    } catch (e) {
+      print('获取未同步数据失败: $e');
+      return [];
+    }
   }
 
   // 搜索需求单
   Future<List<RepairRequest>> searchRequests(String keyword) async {
     final db = await database;
-    final maps = await db.query(
-      'repair_requests',
-      where: 'projectName LIKE ? OR ownerName LIKE ? OR ownerPhone LIKE ?',
-      whereArgs: ['%$keyword%', '%$keyword%', '%$keyword%'],
-      orderBy: 'createdAt DESC',
-    );
-    return maps.map((map) => _mapToRequest(map)).toList();
+    if (db == null) return [];
+    try {
+      final maps = await db.query(
+        'repair_requests',
+        where: 'projectName LIKE ? OR ownerName LIKE ? OR ownerPhone LIKE ?',
+        whereArgs: ['%$keyword%', '%$keyword%', '%$keyword%'],
+        orderBy: 'createdAt DESC',
+      );
+      return maps.map((map) => _mapToRequest(map)).toList();
+    } catch (e) {
+      print('搜索需求单失败: $e');
+      return [];
+    }
   }
 
   // 辅助方法：将RepairRequest转换为Map
@@ -189,7 +256,9 @@ class DatabaseService {
   // 关闭数据库
   Future<void> close() async {
     final db = await database;
-    await db.close();
-    _database = null;
+    if (db != null) {
+      await db.close();
+      _database = null;
+    }
   }
 }

@@ -21,21 +21,31 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
 
   AuthProvider() {
-    _checkLoggedIn();
+    // 延迟初始化，避免在构造函数中直接调用异步方法
+    Future.microtask(() => _checkLoggedIn());
   }
 
   // 检查是否已登录
   Future<void> _checkLoggedIn() async {
     _isCheckingAuth = true;
-    notifyListeners();
+    // 延迟通知，避免在构建过程中调用 notifyListeners
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
 
     try {
       final userData = await _storage.getUserData();
       final token = await _storage.getToken();
 
       if (userData != null && token != null) {
-        _currentUser = User.fromJson(jsonDecode(userData));
-        _apiService.setToken(token);
+        try {
+          _currentUser = User.fromJson(jsonDecode(userData));
+          _apiService.setToken(token);
+        } catch (e) {
+          print('解析用户数据失败: $e');
+          // 清除无效数据
+          await _storage.clearUserData();
+        }
       }
     } catch (e) {
       debugPrint('检查登录状态失败: $e');
