@@ -10,6 +10,20 @@ import 'services/sync_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 捕获 Flutter 框架错误
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('Flutter Error: ${details.exception}');
+    debugPrint('Stack: ${details.stack}');
+  };
+
+  // 捕获异步错误
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Platform Error: $error');
+    debugPrint('Stack: $stack');
+    return true;
+  };
+
   // 设置系统UI样式
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -19,10 +33,14 @@ void main() async {
   );
 
   // 强制竖屏
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (e) {
+    debugPrint('设置屏幕方向失败: $e');
+  }
 
   runApp(const MyApp());
 }
@@ -37,7 +55,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<AuthProvider, RepairProvider>(
           create: (_) => RepairProvider(),
-          update: (_, auth, repair) => repair!..setUser(auth.currentUser),
+          update: (_, auth, repair) {
+            if (repair == null) {
+              return RepairProvider()..setUser(auth.currentUser);
+            }
+            return repair..setUser(auth.currentUser);
+          },
         ),
       ],
       child: MaterialApp(

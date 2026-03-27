@@ -11,6 +11,16 @@ class ApiService {
   String? _token;
   String? _baseUrl;
 
+  // 确保 Dio 已初始化
+  Dio get dio {
+    if (!isInitialized) {
+      init();
+    }
+    return _dio;
+  }
+
+  bool get isInitialized => _baseUrl != null;
+
   // 初始化Dio
   void init({String? baseUrl}) {
     _baseUrl = baseUrl ?? 'https://your-api-server.com/api';
@@ -57,7 +67,7 @@ class ApiService {
   // 登录
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
-      final response = await _dio.post('/auth/login', data: {
+      final response = await dio.post('/auth/login', data: {
         'username': username,
         'password': password,
       });
@@ -77,7 +87,7 @@ class ApiService {
     String? company,
   }) async {
     try {
-      final response = await _dio.post('/auth/register', data: {
+      final response = await dio.post('/auth/register', data: {
         'username': username,
         'password': password,
         'name': name,
@@ -94,7 +104,7 @@ class ApiService {
   // 登出
   Future<Map<String, dynamic>> logout() async {
     try {
-      final response = await _dio.post('/auth/logout');
+      final response = await dio.post('/auth/logout');
       return response.data;
     } catch (e) {
       return _handleError(e);
@@ -104,7 +114,7 @@ class ApiService {
   // 更新用户信息
   Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
     try {
-      final response = await _dio.put('/user/profile', data: data);
+      final response = await dio.put('/user/profile', data: data);
       return response.data;
     } catch (e) {
       return _handleError(e);
@@ -115,7 +125,7 @@ class ApiService {
   Future<Map<String, dynamic>> changePassword(
       String oldPassword, String newPassword) async {
     try {
-      final response = await _dio.put('/user/password', data: {
+      final response = await dio.put('/user/password', data: {
         'oldPassword': oldPassword,
         'newPassword': newPassword,
       });
@@ -129,7 +139,7 @@ class ApiService {
   Future<Map<String, dynamic>> uploadRepairRequest(
       Map<String, dynamic> request) async {
     try {
-      final response = await _dio.post('/repair-requests', data: request);
+      final response = await dio.post('/repair-requests', data: request);
       return response.data;
     } catch (e) {
       return _handleError(e);
@@ -143,7 +153,7 @@ class ApiService {
     String? userId,
   }) async {
     try {
-      final response = await _dio.get('/repair-requests', queryParameters: {
+      final response = await dio.get('/repair-requests', queryParameters: {
         'page': page,
         'pageSize': pageSize,
         if (userId != null) 'userId': userId,
@@ -157,7 +167,7 @@ class ApiService {
   // 获取单个维修需求单
   Future<Map<String, dynamic>> getRepairRequest(String id) async {
     try {
-      final response = await _dio.get('/repair-requests/$id');
+      final response = await dio.get('/repair-requests/$id');
       return response.data;
     } catch (e) {
       return _handleError(e);
@@ -167,7 +177,7 @@ class ApiService {
   // 删除维修需求单
   Future<Map<String, dynamic>> deleteRepairRequest(String id) async {
     try {
-      final response = await _dio.delete('/repair-requests/$id');
+      final response = await dio.delete('/repair-requests/$id');
       return response.data;
     } catch (e) {
       return _handleError(e);
@@ -180,7 +190,7 @@ class ApiService {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(filePath),
       });
-      final response = await _dio.post('/upload/image', data: formData);
+      final response = await dio.post('/upload/image', data: formData);
       return response.data;
     } catch (e) {
       return _handleError(e);
