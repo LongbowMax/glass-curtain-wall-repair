@@ -1,0 +1,105 @@
+================================================================================
+GitHub 文件上传指南 - 修复 Android 构建
+================================================================================
+
+由于网络原因无法自动推送，请手动上传以下 4 个文件到 GitHub：
+
+访问：https://github.com/LongbowMax/glass-curtain-wall-repair
+
+
+================================================================================
+文件 1：android/settings.gradle
+================================================================================
+
+操作：Add file -> Create new file -> 输入路径 -> 粘贴内容 -> Commit
+
+--- 粘贴以下内容 ---
+pluginManagement {
+    def flutterSdkPath = {
+        def properties = new Properties()
+        file("local.properties").withInputStream { properties.load(it) }
+        def flutterSdkPath = properties.getProperty("flutter.sdk")
+        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+        return flutterSdkPath
+    }()
+
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
+
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+plugins {
+    id "dev.flutter.flutter-plugin-loader" version "1.0.0"
+    id "com.android.application" version "8.1.0" apply false
+    id "org.jetbrains.kotlin.android" version "1.8.22" apply false
+}
+
+include ":app"
+
+
+================================================================================
+文件 2：android/gradle.properties
+================================================================================
+
+操作：Add file -> Create new file -> 输入路径 -> 粘贴内容 -> Commit
+
+--- 粘贴以下内容 ---
+org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=2G -XX:+HeapDumpOnOutOfMemoryError
+android.useAndroidX=true
+android.enableJetifier=true
+
+
+================================================================================
+文件 3：android/gradle/wrapper/gradle-wrapper.properties
+================================================================================
+
+操作：Add file -> Create new file -> 输入路径 -> 粘贴内容 -> Commit
+
+--- 粘贴以下内容 ---
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-all.zip
+
+
+================================================================================
+文件 4：修改 android/app/build.gradle
+================================================================================
+
+操作：找到该文件 -> 点击编辑按钮 -> 修改 buildTypes 部分 -> Commit
+
+--- 找到以下代码（约 51-57 行）：---
+buildTypes {
+    release {
+        signingConfig signingConfigs.debug
+        minifyEnabled true
+        shrinkResources true
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+}
+
+--- 替换为：---
+buildTypes {
+    release {
+        signingConfig signingConfigs.debug
+        minifyEnabled false
+        shrinkResources false
+    }
+}
+
+
+================================================================================
+完成后的操作
+================================================================================
+
+1. 确保 4 个文件都已上传/修改
+2. 访问：https://github.com/LongbowMax/glass-curtain-wall-repair/actions
+3. 等待构建完成（约 5-10 分钟）
+4. 构建成功后，在 Releases 页面或 Artifacts 中下载 APK
+
+================================================================================

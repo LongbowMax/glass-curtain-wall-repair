@@ -51,7 +51,6 @@ ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # Coverage
 coverage/

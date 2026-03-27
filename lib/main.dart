@@ -9,7 +9,7 @@ import 'services/sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // 设置系统UI样式
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -17,13 +17,13 @@ void main() async {
       statusBarIconBrightness: Brightness.light,
     ),
   );
-  
+
   // 强制竖屏
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   runApp(const MyApp());
 }
 
@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
             backgroundColor: Color(0xFF1976D2),
             foregroundColor: Colors.white,
           ),
-          cardTheme: CardTheme(
+          cardTheme: CardThemeData(
             elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
