@@ -14,8 +14,8 @@ class PDFService {
     final pdf = pw.Document();
     
     // 加载中文字体
-    final fontData = await rootBundle.load('assets/fonts/NotoSansSC-Regular.otf');
-    final boldFontData = await rootBundle.load('assets/fonts/NotoSansSC-Bold.otf');
+    final fontData = await rootBundle.load('assets/fonts/NotoSansSC-Regular.ttf');
+    final boldFontData = await rootBundle.load('assets/fonts/NotoSansSC-Bold.ttf');
     final ttf = pw.Font.ttf(fontData);
     final boldTtf = pw.Font.ttf(boldFontData);
 

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -6,43 +5,29 @@ import 'providers/repair_provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
-import 'services/sync_service.dart';
 
-void main() {
-  // 使用 runZonedGuarded 捕获异步错误
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-    // 捕获 Flutter 框架错误
-    FlutterError.onError = (FlutterErrorDetails details) {
-      FlutterError.presentError(details);
-      debugPrint('Flutter Error: ${details.exception}');
-      debugPrint('Stack: ${details.stack}');
-    };
+  // 设置系统UI样式
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
 
-    // 设置系统UI样式
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
+  // 强制竖屏
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (e) {
+    debugPrint('设置屏幕方向失败: $e');
+  }
 
-    // 强制竖屏
-    try {
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-      ]);
-    } catch (e) {
-      debugPrint('设置屏幕方向失败: $e');
-    }
-
-    runApp(const MyApp());
-  }, (error, stack) {
-    debugPrint('Uncaught Error: $error');
-    debugPrint('Stack: $stack');
-  });
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
