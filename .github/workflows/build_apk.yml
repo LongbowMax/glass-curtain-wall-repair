@@ -8,10 +8,6 @@ on:
   workflow_dispatch:
   
 permissions:
-   contents: write
-   packages: write
-
-permissions:
   contents: write
   packages: write
 
