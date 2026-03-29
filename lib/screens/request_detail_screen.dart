@@ -488,8 +488,34 @@ class RequestDetailScreen extends StatelessWidget {
   }
 
   void _printReport(BuildContext context, RepairRequest request) async {
-    final filePath = await PDFService.generateRepairReport(request);
-    await PDFService.printPDF(filePath);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text('正在准备打印...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final filePath = await PDFService.generateRepairReport(request);
+      if (context.mounted) {
+        Navigator.pop(context);
+        await PDFService.printPDF(filePath);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('打印失败: $e')),
+        );
+      }
+    }
   }
 
   void _syncToCloud(BuildContext context, RepairRequest request) async {

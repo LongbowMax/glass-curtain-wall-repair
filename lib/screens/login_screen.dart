@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -260,18 +259,16 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
 
-      if (success && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const HomeScreen()),
-        );
+      // AuthWrapper 会自动响应状态变化跳转到 HomeScreen
+      if (!success && mounted) {
+        // 登录失败时错误已通过 auth.error 展示
       }
     }
   }
 
-  void _skipLogin() {
-    // 游客模式直接进主页
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+  void _skipLogin() async {
+    // 游客模式 - 通过AuthProvider管理状态
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    await auth.enterGuestMode();
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -110,8 +111,8 @@ class Helpers {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => WillPopScope(
-        onWillPop: () async => false,
+      builder: (context) => PopScope(
+        canPop: false,
         child: AlertDialog(
           content: Row(
             children: [
@@ -146,10 +147,12 @@ class Helpers {
     return text.substring(0, maxLength) + suffix;
   }
 
-  /// 生成唯一ID（简化版）
+  /// 生成唯一ID
   static String generateId() {
     final now = DateTime.now();
-    return '${now.millisecondsSinceEpoch}_${now.microsecond}';
+    final random = Random.secure();
+    final randomPart = random.nextInt(0xFFFFFF).toRadixString(16).padLeft(6, '0');
+    return '${now.millisecondsSinceEpoch}_$randomPart';
   }
 }
 

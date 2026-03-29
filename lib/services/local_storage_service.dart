@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalStorageService {
@@ -95,7 +96,7 @@ class LocalStorageService {
   Future<bool> saveSettings(Map<String, dynamic> settings) async {
     final prefs = await _getPrefs();
     if (prefs == null) return false;
-    return prefs.setString('app_settings', settings.toString());
+    return prefs.setString('app_settings', jsonEncode(settings));
   }
 
   // 获取设置
@@ -104,9 +105,27 @@ class LocalStorageService {
     if (prefs == null) return null;
     final settingsStr = prefs.getString('app_settings');
     if (settingsStr != null) {
-      return {};
+      try {
+        return Map<String, dynamic>.from(jsonDecode(settingsStr));
+      } catch (e) {
+        return null;
+      }
     }
     return null;
+  }
+
+  // 保存游客模式状态
+  Future<bool> saveGuestMode(bool isGuest) async {
+    final prefs = await _getPrefs();
+    if (prefs == null) return false;
+    return prefs.setBool('guest_mode', isGuest);
+  }
+
+  // 获取游客模式状态
+  Future<bool?> getGuestMode() async {
+    final prefs = await _getPrefs();
+    if (prefs == null) return null;
+    return prefs.getBool('guest_mode');
   }
 
   // 清除所有数据

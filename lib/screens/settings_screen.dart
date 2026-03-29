@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/repair_provider.dart';
 import '../services/local_storage_service.dart';
+import '../services/database_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -236,9 +238,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
+              // 清除 SharedPreferences 和 SQLite 数据库
               final storage = LocalStorageService();
+              final dbService = DatabaseService();
               await storage.clearAll();
+              
+              // 获取所有需求单并逐一删除
+              final requests = await dbService.getAllRequests();
+              for (final req in requests) {
+                await dbService.deleteRequest(req.id);
+              }
+              await dbService.close();
+
               if (context.mounted) {
+                // 刷新内存中的列表
+                Provider.of<RepairProvider>(context, listen: false).loadRequests();
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('所有数据已清除')),

@@ -473,8 +473,10 @@ class _RepairItemDetailScreenState extends State<RepairItemDetailScreen> {
       notes: _notesController.text.isEmpty ? null : _notesController.text,
     );
 
-    // 返回新建页面
-    Navigator.popUntil(context, (route) => route.isFirst);
+    // 返回到选择类型页面的上一级（新建需求页面）
+    // pop两次：RepairItemDetailScreen → SelectRepairTypeScreen → NewRequestScreen
+    Navigator.pop(context); // 回到 SelectRepairTypeScreen
+    Navigator.pop(context); // 回到 NewRequestScreen
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

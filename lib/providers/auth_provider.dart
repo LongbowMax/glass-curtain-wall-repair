@@ -8,6 +8,7 @@ class AuthProvider extends ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   bool _isCheckingAuth = true;
+  bool _isGuestMode = false;
   String? _error;
 
   final ApiService _apiService = ApiService();
@@ -16,7 +17,8 @@ class AuthProvider extends ChangeNotifier {
   // Getters
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
-  bool get isLoggedIn => _currentUser != null;
+  bool get isLoggedIn => _currentUser != null || _isGuestMode;
+  bool get isGuestMode => _isGuestMode;
   bool get isCheckingAuth => _isCheckingAuth;
   String? get error => _error;
 
@@ -45,6 +47,13 @@ class AuthProvider extends ChangeNotifier {
           print('解析用户数据失败: $e');
           // 清除无效数据
           await _storage.clearUserData();
+        }
+      } else {
+        // 检查是否之前选择了游客模式
+        final prefs = await _storage.getToken();
+        if (prefs == null) {
+          final guestFlag = await _storage.getGuestMode();
+          _isGuestMode = guestFlag ?? false;
         }
       }
     } catch (e) {
@@ -126,6 +135,13 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // 进入游客模式
+  Future<void> enterGuestMode() async {
+    _isGuestMode = true;
+    await _storage.saveGuestMode(true);
+    notifyListeners();
+  }
+
   // 退出登录
   Future<void> logout() async {
     _setLoading(true);
@@ -140,6 +156,7 @@ class AuthProvider extends ChangeNotifier {
     await _storage.clearAll();
     _apiService.clearToken();
     _currentUser = null;
+    _isGuestMode = false;
 
     _setLoading(false);
     notifyListeners();
