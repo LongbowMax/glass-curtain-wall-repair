@@ -30,7 +30,7 @@ class ShanghaiPriceConfig {
 
   // ========== 玻璃材料价格（元/平方米） ==========
   static const Map<String, double> glassPrices = {
-    ' tempered_6mm': 120.0, // 6mm钢化玻璃
+    'tempered_6mm': 120.0, // 6mm钢化玻璃
     'tempered_8mm': 160.0, // 8mm钢化玻璃
     'tempered_10mm': 200.0, // 10mm钢化玻璃
     'tempered_12mm': 240.0, // 12mm钢化玻璃

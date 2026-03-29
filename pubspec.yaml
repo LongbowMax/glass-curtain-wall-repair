@@ -32,6 +32,8 @@ dependencies:
   permission_handler: ^11.3.0
   # 设备信息
   device_info_plus: ^9.1.2
+  # UUID生成
+  uuid: ^4.2.1
   # 日期格式化
   intl: ^0.19.0
   # UI组件
